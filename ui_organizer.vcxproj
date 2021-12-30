@@ -88,9 +88,9 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
     </Link>
-    <PostBuildEvent>
+    <!--PostBuildEvent>
       <Command>copy "$(TargetPath)" "D:\Games\Fallout New Vegas\Data\NVSE\plugins\$(TargetFileName)"</Command>
-    </PostBuildEvent>
+    </PostBuildEvent-->
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
     </PostBuildEvent>

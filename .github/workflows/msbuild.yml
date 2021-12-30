@@ -4,30 +4,46 @@ on: [push, pull_request]
 
 env:
   SOLUTION_FILE_PATH: ui_organizer.sln
-  BUILD_CONFIGURATION: Debug
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [windows-2016, windows-2019, windows-2022] # windows-latest
+        include:
+        - os: windows-2016
+          PlatformToolset: v141
+          WindowsTargetPlatformVersion: 8.1
+        - os: windows-2019
+          PlatformToolset: v142
+          WindowsTargetPlatformVersion: 10.0
+        - os: windows-2022
+          PlatformToolset: v143
+          WindowsTargetPlatformVersion: 10.0
+
+        # windows-latest
 
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: TMP Patch
-      run: git checkout ui_organizer -- .
+    #- name: TMP Patch
+    #  run: git checkout ui_organizer -- .
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Build
+    - name: Build (Debug)
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=Debug ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=${{matrix.PlatformToolset}} /p:WindowsTargetPlatformVersion=${{matrix.WindowsTargetPlatformVersion}}
+
+    - name: Build (Release)
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=${{matrix.PlatformToolset}} /p:WindowsTargetPlatformVersion=${{matrix.WindowsTargetPlatformVersion}}
 
     - name: Upload binaries
       uses: actions/upload-artifact@v2.3.1
       with:
-        path: ${{env.GITHUB_WORKSPACE}}/${{env.BUILD_CONFIGURATION}}
+        path: |
+          ${{github.workspace}}/Debug
+          ${{github.workspace}}/Release
