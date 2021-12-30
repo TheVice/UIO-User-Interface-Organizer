@@ -1,0 +1,30 @@
+name: MSBuild
+
+on: [push, pull_request]
+
+env:
+  SOLUTION_FILE_PATH: ui_organizer.sln
+  BUILD_CONFIGURATION: Debug
+
+jobs:
+  build:
+    runs-on: [windows-2016, windows-2019, windows-2022] # windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: TMP Patch
+      run: git checkout ui_organizer -- .
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Upload binaries
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        path: ${{env.GITHUB_WORKSPACE}}/${{env.BUILD_CONFIGURATION}}
+
