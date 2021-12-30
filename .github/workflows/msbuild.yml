@@ -44,6 +44,7 @@ jobs:
     - name: Upload binaries
       uses: actions/upload-artifact@v2.3.1
       with:
+        name: artifact-toolset_${{matrix.PlatformToolset}}
         path: |
           ${{github.workspace}}/Debug
           ${{github.workspace}}/Release
