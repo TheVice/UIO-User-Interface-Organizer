@@ -7,44 +7,41 @@ env:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-        - os: windows-2016
-          PlatformToolset: v141
-          WindowsTargetPlatformVersion: 8.1
-        - os: windows-2019
-          PlatformToolset: v142
-          WindowsTargetPlatformVersion: 10.0
-        - os: windows-2022
-          PlatformToolset: v143
-          WindowsTargetPlatformVersion: 10.0
 
-        # windows-latest
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
 
-    #- name: TMP Patch
-    #  run: git checkout ui_organizer -- .
-
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Build (Debug)
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=Debug ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=${{matrix.PlatformToolset}} /p:WindowsTargetPlatformVersion=${{matrix.WindowsTargetPlatformVersion}}
-
-    - name: Build (Release)
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=${{matrix.PlatformToolset}} /p:WindowsTargetPlatformVersion=${{matrix.WindowsTargetPlatformVersion}}
+    - name: Build
+      working-directory: ${{github.workspace}}
+      run: |
+        $ver = vswhere.exe -latest -format value -property catalog_productLineVersion
+        if ("2019" -eq $ver)
+        {
+          msbuild /m /p:Configuration=Debug ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=v142
+          msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=v142
+        }
+        elseif ("2022" -eq $ver)
+        {
+          msbuild /m /p:Configuration=Debug ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=v143
+          msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}} /p:PlatformToolset=v143 
+        }
+        else
+        {
+          $message = "Unknown version of Visual Studio used - '{0}'." -f $ver
+          Write-Warning -Message $message
+          msbuild /m /p:Configuration=Debug ${{env.SOLUTION_FILE_PATH}}
+          msbuild /m /p:Configuration=Release ${{env.SOLUTION_FILE_PATH}}
+        }
 
     - name: Upload binaries
       uses: actions/upload-artifact@v2.3.1
       with:
-        name: artifact-toolset_${{matrix.PlatformToolset}}
+        name: artifact
         path: |
           ${{github.workspace}}/Debug
           ${{github.workspace}}/Release
